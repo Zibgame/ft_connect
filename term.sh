@@ -25,3 +25,5 @@ echo "✅ Commande enregistrée dans : $CMD_FILE"
 echo "-----------------------------------------"
 cat "$CMD_FILE"
 
+zcadinot
+python3/sgoinfre/goinfre/Perso/zcadinot/ft_connect/src/strombo.py

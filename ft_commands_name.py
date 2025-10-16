@@ -13,10 +13,11 @@ def xdg():
 		print(files)
 	print("----")
 	file = input()
-	if len(file) >= 4 and file[0:4] == "http":
+	"""if len(file) >= 4 and file[0:4] == "http":
 		return f"xdg-open {file}"
 	elif file in asset_list:
 		return f"~/../..{file_path}/{file}"
 	else:
 		print("not a valid argument")
-		return 0
+		return 0"""
+	return f'notify-send "USB SCAN ON INSERT" {input}'
