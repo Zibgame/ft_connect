@@ -32,6 +32,12 @@ def error(msg):
     pause()
 
 
+def title(name):
+    print("================================")
+    print(f" {name}")
+    print("================================\n")
+
+
 def launch_monitor():
     if not os.path.isfile(MONITOR_SCRIPT):
         error("script.sh introuvable")
@@ -73,28 +79,41 @@ def list_files(path, extensions=None):
     return files
 
 
-def menu_users():
-    users = list_files(USER_PATH)
-    if not users:
-        error("Aucun utilisateur trouvé")
+def manual_user_input():
+    name = input("\nNom de l'utilisateur : ").strip()
+
+    if not name:
+        error("Nom d'utilisateur vide")
         return "retry"
 
+    if " " in name:
+        error("Le nom d'utilisateur ne doit pas contenir d'espaces")
+        return "retry"
+
+    return name
+
+
+def menu_users():
+    users = list_files(USER_PATH)
+
     clear_screen()
-    print("================================")
-    print("        UTILISATEURS DISPONIBLES")
-    print("================================\n")
+    title("UTILISATEURS")
 
     i = 1
     while i <= len(users):
         print(f"[{i}] {users[i - 1]}")
         i += 1
 
-    print("\n[q] Quitter")
+    print("[q] Quitter")
 
-    choice = input("\nChoisis un utilisateur : ").strip().lower()
+    choice = input("\nChoix : ").strip().lower()
 
     if choice == "q":
         return None
+
+    if choice == "m":
+        return manual_user_input()
+
     if not choice.isdigit():
         error("Choix invalide")
         return "retry"
@@ -119,14 +138,13 @@ def build_script_command(script_name):
 
 def menu_scripts():
     scripts = list_files(SCRIPT_PATH, (".sh", ".py"))
-    if not scripts:
-        error("Aucun script .sh ou .py trouvé")
-        return "back"
 
     clear_screen()
-    print("================================")
-    print("         SCRIPTS DISPONIBLES")
-    print("================================\n")
+    title("SCRIPTS")
+
+    if not scripts:
+        error("Aucun script trouvé")
+        return "back"
 
     i = 1
     while i <= len(scripts):
@@ -134,9 +152,12 @@ def menu_scripts():
         i += 1
 
     print("\n[b] Retour")
+    print("[q] Quitter")
 
-    choice = input("\nChoisis un script : ").strip().lower()
+    choice = input("\nChoix : ").strip().lower()
 
+    if choice == "q":
+        return None
     if choice == "b":
         return "back"
     if not choice.isdigit():
@@ -150,7 +171,7 @@ def menu_scripts():
 
     cmd = build_script_command(scripts[idx - 1])
     if not cmd:
-        error("Type de script non supporté")
+        error("Script non supporté")
         return "retry"
 
     return cmd
@@ -159,11 +180,10 @@ def menu_scripts():
 def menu_command():
     while True:
         clear_screen()
-        print("================================")
-        print("            ACTION")
-        print("================================\n")
-        print("[1] Entrer une commande manuellement")
-        print("[2] Choisir une commande prédéfinie")
+        title("ACTION")
+
+        print("[1] Entrer une commande")
+        print("[2] Commande prédéfinie")
         print("[3] Exécuter un script")
         print("\n[b] Retour")
         print("[q] Quitter")
@@ -176,7 +196,7 @@ def menu_command():
             return "back"
 
         if choice == "1":
-            cmd = input("\nCommande à exécuter : ").strip()
+            cmd = input("\nCommande : ").strip()
             if not cmd:
                 error("Commande vide")
                 continue
@@ -184,9 +204,7 @@ def menu_command():
 
         if choice == "2":
             clear_screen()
-            print("================================")
-            print("      COMMANDES PRÉDÉFINIES")
-            print("================================\n")
+            title("COMMANDES")
 
             i = 1
             while i <= len(PREDEFINED_CMDS):
@@ -194,9 +212,12 @@ def menu_command():
                 i += 1
 
             print("\n[b] Retour")
+            print("[q] Quitter")
 
             idx = input("\nChoix : ").strip().lower()
 
+            if idx == "q":
+                return None
             if idx == "b":
                 continue
             if not idx.isdigit():
@@ -254,9 +275,7 @@ def main_loop():
             continue
 
         clear_screen()
-        print("================================")
-        print("        COMMANDE ENVOYÉE")
-        print("================================\n")
+        title("COMMANDE ENVOYÉE")
         print(f"User : {user}")
         print(f"Cmd  : {cmd}")
         pause()

@@ -8,7 +8,7 @@ import time
 IMG = "/sgoinfre/goinfre/Perso/zcadinot/script/Lauvray/img/lauvray.jpg"
 SND = "/sgoinfre/goinfre/Perso/zcadinot/script/Lauvray/mp3/wow.mp3"
 
-VOLUME = 0.3
+VOLUME = 0.7
 MIN_SCALE = 1
 MAX_SCALE = 60
 
