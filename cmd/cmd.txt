@@ -1,1 +1,2 @@
-None
+zcadinot
+python3 /sgoinfre/goinfre/Perso/zcadinot/script/fc/ft_connect/script/strobo.py
